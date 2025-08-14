@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/apex_dev
+      - REDIS_URL=redis://redis:6379
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_SECRET=${BINANCE_SECRET}
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+    networks:
+      - apex-network
+
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+      - MONGO_INITDB_DATABASE=apex_dev
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - apex-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - apex-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - apex-network
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - apex-network
+
+volumes:
+  mongo_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  apex-network:
+    driver: bridge

@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Database
+data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.tgz
+*.tar.gz
+.cache/
