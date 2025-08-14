@@ -173,11 +173,11 @@ graph TB
 **Objetivo**: Implementar motor de estratégias com múltiplos indicadores
 
 #### Sprint 2.1: Indicadores Técnicos (Semana 5)
-- [ ] Implementação de RSI, MACD, Bollinger Bands
-- [ ] Sistema de Médias Móveis (SMA, EMA, WMA)
-- [ ] Stochastic, Williams %R, ATR
-- [ ] Volume indicators (VWAP, OBV, Volume Profile)
-- [ ] Sistema de caching para cálculos
+- [x] Implementação de RSI, MACD, Bollinger Bands
+- [x] Sistema de Médias Móveis (SMA, EMA, WMA)
+- [x] Stochastic, Williams %R, ATR
+- [x] Volume indicators (VWAP, OBV, Volume Profile)
+- [x] Sistema de caching para cálculos
 
 #### Sprint 2.2: Sistema de Scoring (Semana 6)
 - [ ] **Engine de Scoring de Sinais**
