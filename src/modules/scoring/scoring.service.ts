@@ -5,10 +5,11 @@ import { SignalDto } from './dtos/signal.dto';
 // Based on PLANEJAMENTO.md
 const defaultConfig = {
   weights: {
-    trend: 0.35,
-    momentum: 0.25, // RSI could be a momentum indicator
-    volume: 0.2,
-    support_resistance: 0.2,
+    '1m': { trend: 0.2, momentum: 0.4, volume: 0.4 },
+    '5m': { trend: 0.35, momentum: 0.25, volume: 0.2, support_resistance: 0.2 },
+    '15m': { trend: 0.4, momentum: 0.2, volume: 0.15, support_resistance: 0.25 },
+    '1h': { trend: 0.5, momentum: 0.15, volume: 0.1, support_resistance: 0.25 },
+    '4h': { trend: 0.6, momentum: 0.1, volume: 0.05, support_resistance: 0.25 },
   },
   minimum_score: 70,
   timeframe_multiplier: {
@@ -22,14 +23,12 @@ const defaultConfig = {
 
 @Injectable()
 export class ScoringService {
-  calculateScore(signal: SignalDto): number {
+  calculateScore(signal: SignalDto): { score: number; confidence: number } {
     let score = 0;
+    const weights = defaultConfig.weights[signal.timeframe] || defaultConfig.weights['5m'];
 
     // 1. Score Momentum (RSI)
     if (signal.indicators.rsi) {
-      // Example: simple linear score for RSI
-      // Buy signal: RSI 30-50 -> score 50-100
-      // Sell signal: RSI 70-50 -> score 50-100
       const rsi = signal.indicators.rsi;
       let rsiScore = 0;
       if (rsi > 50) { // Potential sell
@@ -37,28 +36,31 @@ export class ScoringService {
       } else { // Potential buy
         rsiScore = Math.max(0, ( (rsi - 30) * (100 / 20) ) ); // 30->0, 50->100
       }
-      score += rsiScore * defaultConfig.weights.momentum;
+      score += rsiScore * weights.momentum;
     }
 
     // 2. Score Trend
     if (signal.indicators.trendStrength) {
-      // Assuming trendStrength is -1 (strong down) to +1 (strong up)
       const trendScore = (signal.indicators.trendStrength + 1) * 50; // Scale to 0-100
-      score += trendScore * defaultConfig.weights.trend;
+      score += trendScore * weights.trend;
     }
     
     // 3. Score Volume
     if (signal.indicators.volumeStrength) {
-        // Assuming volumeStrength is 0 to N (e.g., 1.5 for 50% above avg)
-        // Cap score at 100
         const volumeScore = Math.min(100, signal.indicators.volumeStrength * 50);
-        score += volumeScore * defaultConfig.weights.volume;
+        score += volumeScore * weights.volume;
     }
 
     // 4. Apply Timeframe Multiplier
     const multiplier = defaultConfig.timeframe_multiplier[signal.timeframe] || 1.0;
     score *= multiplier;
 
-    return Math.round(Math.min(100, score)); // Final score capped at 100
+    // 5. Calculate Confidence (simple example)
+    const confidence = signal.confidence || 0.8; // Static confidence for now
+
+    return {
+      score: Math.round(Math.min(100, score)), // Final score capped at 100
+      confidence,
+    };
   }
 }

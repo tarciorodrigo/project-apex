@@ -1,31 +1,19 @@
+import { IsNotEmpty, IsString, IsObject, IsOptional, IsNumber } from 'class-validator';
 
-import { IsNotEmpty, IsNumber, IsObject, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-
-export class IndicatorValues {
-  @IsNumber()
-  rsi?: number;
+export class SignalDto {
+  @IsString()
+  @IsNotEmpty()
+  timeframe: string;
 
   @IsObject()
-  macd?: {
-    MACD: number;
-    signal: number;
-    histogram: number;
+  @IsNotEmpty()
+  indicators: {
+    rsi?: number;
+    trendStrength?: number;
+    volumeStrength?: number;
   };
 
   @IsNumber()
-  trendStrength?: number; // e.g., from an EMA cross
-
-  @IsNumber()
-  volumeStrength?: number; // e.g., volume vs average volume
-}
-
-export class SignalDto {
-  @IsNotEmpty()
-  @ValidateNested()
-  @Type(() => IndicatorValues)
-  indicators: IndicatorValues;
-
-  @IsNotEmpty()
-  timeframe: '1m' | '5m' | '15m' | '1h' | '4h';
+  @IsOptional()
+  confidence?: number;
 }

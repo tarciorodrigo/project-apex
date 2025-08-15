@@ -181,10 +181,10 @@ graph TB
 
 #### Sprint 2.2: Sistema de Scoring (Semana 6)
 - [x] **Engine de Scoring de Sinais**
-- [ ] Confluência de indicadores
-- [ ] Pesos dinâmicos por timeframe
-- [ ] Sistema de confiança dos sinais
-- [ ] Backtesting básico das estratégias
+- [x] Confluência de indicadores
+- [x] Pesos dinâmicos por timeframe
+- [x] Sistema de confiança dos sinais
+- [x] Backtesting básico das estratégias
 
 #### Sprint 2.3: Multi-Timeframe Analysis (Semana 7)
 - [ ] Análise simultânea 1m, 5m, 15m, 1h, 4h
