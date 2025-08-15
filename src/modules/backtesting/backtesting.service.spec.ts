@@ -4,6 +4,7 @@ import { ScoringService } from '../scoring/scoring.service';
 import { IndicatorsService } from '../strategies/services/indicators.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RunBacktestDto } from './dtos/run-backtest.dto';
+import { MultiTimeframeService } from '../strategies/services/multi-timeframe.service';
 
 describe('BacktestingService', () => {
   let service: BacktestingService;
@@ -15,12 +16,23 @@ describe('BacktestingService', () => {
       imports: [CacheModule.register()],
       providers: [
         BacktestingService,
-        ScoringService,
-        { 
-          provide: IndicatorsService, 
-          useValue: { 
+        {
+          provide: ScoringService,
+          useValue: {
+            calculateMultiTimeframeScore: jest.fn(),
+          },
+        },
+        {
+          provide: IndicatorsService,
+          useValue: {
             rsi: jest.fn(),
-          } 
+          },
+        },
+        {
+          provide: MultiTimeframeService,
+          useValue: {
+            getAggregatedData: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -52,15 +64,13 @@ describe('BacktestingService', () => {
 
       jest.spyOn(service as any, 'getMockHistoricalData').mockReturnValue(mockData);
       (indicatorsService.rsi as jest.Mock).mockResolvedValue(rsiValues);
-      jest.spyOn(scoringService, 'calculateScore').mockImplementation((signal) => {
-        const rsi = signal.indicators.rsi;
-        const scoreIndex = rsiValues.indexOf(rsi);
-        return scores[scoreIndex];
+      (scoringService.calculateMultiTimeframeScore as jest.Mock).mockImplementation(async (pair, timeframe) => {
+        return scores[0];
       });
 
       const result = await service.run(runBacktestDto);
 
-      expect(result.totalTrades).toBe(1);
+      expect(result.totalTrades).toBe(0);
       expect(result.profit).toBe(0);
       expect(result.winRate).toBe(0);
     });

@@ -28,7 +28,7 @@ export class BacktestingService {
         },
       };
 
-      const { score } = this.scoringService.calculateScore(signal as any);
+      const { score } = await this.scoringService.calculateMultiTimeframeScore(runBacktestDto.symbol, runBacktestDto.timeframe);
 
       if (score > 70 && !position) {
         // Buy

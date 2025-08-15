@@ -19,6 +19,8 @@ import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
 import { BacktestingModule } from './modules/backtesting/backtesting.module';
 
+import { IndicatorsModule } from './modules/strategies/indicators.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -60,6 +62,7 @@ import { BacktestingModule } from './modules/backtesting/backtesting.module';
     NotificationsModule,
     ScoringModule,
     BacktestingModule,
+    IndicatorsModule,
   ],
 })
 export class AppModule {}
