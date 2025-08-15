@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IndicatorsService } from './indicators.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ScoringService } from '../../scoring/scoring.service';
 
 describe('IndicatorsService', () => {
   let service: IndicatorsService;
@@ -8,7 +9,7 @@ describe('IndicatorsService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [CacheModule.register()],
-      providers: [IndicatorsService],
+      providers: [IndicatorsService, ScoringService],
     }).compile();
 
     service = module.get<IndicatorsService>(IndicatorsService);

@@ -180,7 +180,7 @@ graph TB
 - [x] Sistema de caching para cálculos
 
 #### Sprint 2.2: Sistema de Scoring (Semana 6)
-- [ ] **Engine de Scoring de Sinais**
+- [x] **Engine de Scoring de Sinais**
 - [ ] Confluência de indicadores
 - [ ] Pesos dinâmicos por timeframe
 - [ ] Sistema de confiança dos sinais

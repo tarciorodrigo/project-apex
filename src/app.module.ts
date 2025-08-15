@@ -11,6 +11,8 @@ import { StrategiesModule } from './modules/strategies/strategies.module';
 import { RiskManagementModule } from './modules/risk-management/risk-management.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ScoringModule } from './modules/scoring/scoring.module';
+
 
 // Configuration
 import configuration from './config/configuration';
@@ -55,6 +57,7 @@ import { validationSchema } from './config/validation';
     RiskManagementModule,
     OrdersModule,
     NotificationsModule,
+    ScoringModule,
   ],
 })
 export class AppModule {}

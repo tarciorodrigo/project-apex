@@ -15,10 +15,15 @@ import {
   OBV,
 } from 'technicalindicators';
 import { createHash } from 'crypto';
+import { ScoringService } from '../../scoring/scoring.service';
+import { SignalDto } from '../../scoring/dtos/signal.dto';
 
 @Injectable()
 export class IndicatorsService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private scoringService: ScoringService,
+  ) {}
 
   private createCacheKey(indicator: string, params: any, data: any): string {
     const hash = createHash('sha256').update(JSON.stringify(data)).digest('hex');
@@ -37,6 +42,13 @@ export class IndicatorsService {
     const result = calculation();
     await this.cacheManager.set(key, result, ttl);
     return result;
+  }
+
+  // Example of how to use the scoring service
+  async getSignalScore(signal: SignalDto): Promise<number> {
+    // In a real scenario, you would gather indicator data here
+    // and then pass it to the scoring service.
+    return this.scoringService.calculateScore(signal);
   }
 
   // RSI
