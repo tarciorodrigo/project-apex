@@ -17,6 +17,7 @@ import { ScoringModule } from './modules/scoring/scoring.module';
 // Configuration
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
+import { BacktestingModule } from './modules/backtesting/backtesting.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { validationSchema } from './config/validation';
     OrdersModule,
     NotificationsModule,
     ScoringModule,
+    BacktestingModule,
   ],
 })
 export class AppModule {}

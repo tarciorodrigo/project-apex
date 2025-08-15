@@ -45,7 +45,7 @@ export class IndicatorsService {
   }
 
   // Example of how to use the scoring service
-  async getSignalScore(signal: SignalDto): Promise<number> {
+  async getSignalScore(signal: SignalDto): Promise<{ score: number; confidence: number }> {
     // In a real scenario, you would gather indicator data here
     // and then pass it to the scoring service.
     return this.scoringService.calculateScore(signal);
