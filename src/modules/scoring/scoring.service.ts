@@ -1,6 +1,8 @@
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SignalDto } from './dtos/signal.dto';
+import { MultiTimeframeService } from '../strategies/services/multi-timeframe.service';
+import { IndicatorsService } from '../strategies/services/indicators.service';
 
 // Based on PLANEJAMENTO.md
 const defaultConfig = {
@@ -19,48 +21,98 @@ const defaultConfig = {
     '1h': 2.0,
     '4h': 2.5, // Added 4h for completeness
   },
+  confirmation_weight: 0.2, // Weight for the confirmation score
+  divergence_weight: 0.3, // Weight for the divergence score
 };
 
 @Injectable()
 export class ScoringService {
-  calculateScore(signal: SignalDto): { score: number; confidence: number } {
+  private readonly logger = new Logger(ScoringService.name);
+
+  constructor(
+    private readonly multiTimeframeService: MultiTimeframeService,
+    private readonly indicatorsService: IndicatorsService,
+  ) {}
+
+  async calculateMultiTimeframeScore(pair: string, primaryTimeframe: string): Promise<{ score: number; confidence: number }> {
+    const aggregatedData = this.multiTimeframeService.getAggregatedData(pair);
+    if (!aggregatedData || aggregatedData.size === 0) {
+      this.logger.warn(`No market data found for ${pair}. Cannot calculate score.`);
+      return { score: 0, confidence: 0 };
+    }
+
+    const primarySignal: SignalDto = aggregatedData.get(primaryTimeframe);
+    if (!primarySignal) {
+      this.logger.warn(`No primary signal found for ${pair} on timeframe ${primaryTimeframe}.`);
+      return { score: 0, confidence: 0 };
+    }
+
+    let primaryScore = this.calculateSingleTimeframeScore(primarySignal);
+    let confirmationScore = 0;
+    let confirmationCount = 0;
+
+    for (const [timeframe, signal] of aggregatedData.entries()) {
+      if (timeframe !== primaryTimeframe) {
+        confirmationScore += this.calculateSingleTimeframeScore(signal as SignalDto);
+        confirmationCount++;
+      }
+    }
+
+    if (confirmationCount > 0) {
+      const averageConfirmationScore = confirmationScore / confirmationCount;
+      primaryScore = primaryScore * (1 - defaultConfig.confirmation_weight) + averageConfirmationScore * defaultConfig.confirmation_weight;
+    }
+
+    // Divergence Detection
+    const priceHistory = Array.from(aggregatedData.values()).map((signal: SignalDto) => ({ high: signal.indicators.high, low: signal.indicators.low, close: signal.indicators.close }));
+    const rsiHistory = Array.from(aggregatedData.values()).map((signal: SignalDto) => signal.indicators.rsi);
+    const divergence = await this.indicatorsService.detectDivergence(priceHistory, rsiHistory);
+
+    let divergenceScore = 0;
+    if (divergence) {
+      if (divergence.type === 'bullish') {
+        divergenceScore = divergence.strength * 100;
+      } else {
+        divergenceScore = -divergence.strength * 100;
+      }
+    }
+
+    const scoreWithDivergence = primaryScore * (1 - defaultConfig.divergence_weight) + divergenceScore * defaultConfig.divergence_weight;
+
+    const multiplier = defaultConfig.timeframe_multiplier[primaryTimeframe] || 1.0;
+    const finalScore = scoreWithDivergence * multiplier;
+
+    return {
+      score: Math.round(Math.min(100, finalScore)),
+      confidence: primarySignal.confidence || 0.8,
+    };
+  }
+
+  private calculateSingleTimeframeScore(signal: SignalDto): number {
     let score = 0;
     const weights = defaultConfig.weights[signal.timeframe] || defaultConfig.weights['5m'];
 
-    // 1. Score Momentum (RSI)
     if (signal.indicators.rsi) {
       const rsi = signal.indicators.rsi;
       let rsiScore = 0;
-      if (rsi > 50) { // Potential sell
-        rsiScore = Math.max(0, 100 - ( (rsi - 50) * (100 / 20) ) ); // 70->0, 50->100
-      } else { // Potential buy
-        rsiScore = Math.max(0, ( (rsi - 30) * (100 / 20) ) ); // 30->0, 50->100
+      if (rsi > 50) {
+        rsiScore = Math.max(0, 100 - ((rsi - 50) * (100 / 20)));
+      } else {
+        rsiScore = Math.max(0, ((rsi - 30) * (100 / 20)));
       }
       score += rsiScore * weights.momentum;
     }
 
-    // 2. Score Trend
     if (signal.indicators.trendStrength) {
-      const trendScore = (signal.indicators.trendStrength + 1) * 50; // Scale to 0-100
+      const trendScore = (signal.indicators.trendStrength + 1) * 50;
       score += trendScore * weights.trend;
     }
-    
-    // 3. Score Volume
+
     if (signal.indicators.volumeStrength) {
-        const volumeScore = Math.min(100, signal.indicators.volumeStrength * 50);
-        score += volumeScore * weights.volume;
+      const volumeScore = Math.min(100, signal.indicators.volumeStrength * 50);
+      score += volumeScore * weights.volume;
     }
 
-    // 4. Apply Timeframe Multiplier
-    const multiplier = defaultConfig.timeframe_multiplier[signal.timeframe] || 1.0;
-    score *= multiplier;
-
-    // 5. Calculate Confidence (simple example)
-    const confidence = signal.confidence || 0.8; // Static confidence for now
-
-    return {
-      score: Math.round(Math.min(100, score)), // Final score capped at 100
-      confidence,
-    };
+    return score;
   }
 }

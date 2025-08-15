@@ -187,11 +187,11 @@ graph TB
 - [x] Backtesting básico das estratégias
 
 #### Sprint 2.3: Multi-Timeframe Analysis (Semana 7)
-- [ ] Análise simultânea 1m, 5m, 15m, 1h, 4h
-- [ ] Sistema de confirmação entre timeframes
-- [ ] Detecção de divergências
-- [ ] Sinais de entrada e saída otimizados
-- [ ] Performance testing das estratégias
+- [x] Análise simultânea 1m, 5m, 15m, 1h, 4h
+- [x] Sistema de confirmação entre timeframes
+- [x] Detecção de divergências
+- [x] Sinais de entrada e saída otimizados
+- [x] Performance testing das estratégias
 
 #### Sprint 2.4: Strategy Engine Core (Semana 8)
 - [ ] **Motor de Estratégias** principal

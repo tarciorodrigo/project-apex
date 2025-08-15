@@ -15,14 +15,22 @@ import {
   OBV,
 } from 'technicalindicators';
 import { createHash } from 'crypto';
-import { ScoringService } from '../../scoring/scoring.service';
-import { SignalDto } from '../../scoring/dtos/signal.dto';
+
+interface Candlestick {
+  high: number;
+  low: number;
+  close: number;
+}
+
+interface Divergence {
+  type: 'bullish' | 'bearish';
+  strength: number;
+}
 
 @Injectable()
 export class IndicatorsService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private scoringService: ScoringService,
   ) {}
 
   private createCacheKey(indicator: string, params: any, data: any): string {
@@ -44,13 +52,85 @@ export class IndicatorsService {
     return result;
   }
 
-  // Example of how to use the scoring service
-  async getSignalScore(signal: SignalDto): Promise<{ score: number; confidence: number }> {
-    // In a real scenario, you would gather indicator data here
-    // and then pass it to the scoring service.
-    return this.scoringService.calculateScore(signal);
+  // ... (keep all the existing indicator methods)
+
+  async detectDivergence(
+    priceHistory: Candlestick[],
+    indicatorHistory: number[],
+    lookbackPeriod = 14,
+  ): Promise<Divergence | null> {
+    const prices = priceHistory.slice(-lookbackPeriod);
+    const indicators = indicatorHistory.slice(-lookbackPeriod);
+
+    const priceHighs = this.findPeaks(prices.map(p => p.high));
+    const priceLows = this.findTroughs(prices.map(p => p.low));
+    const indicatorHighs = this.findPeaks(indicators);
+    const indicatorLows = this.findTroughs(indicators);
+
+    // Bearish Divergence: Higher high in price, lower high in indicator
+    if (priceHighs.length >= 2 && indicatorHighs.length >= 2) {
+      const lastPriceHigh = priceHighs[priceHighs.length - 1];
+      const prevPriceHigh = priceHighs[priceHighs.length - 2];
+      const lastIndicatorHigh = indicatorHighs[indicatorHighs.length - 1];
+      const prevIndicatorHigh = indicatorHighs[indicatorHighs.length - 2];
+
+      if (lastPriceHigh.value > prevPriceHigh.value && lastIndicatorHigh.value < prevIndicatorHigh.value) {
+        return {
+          type: 'bearish',
+          strength: this.calculateDivergenceStrength(lastPriceHigh, prevPriceHigh, lastIndicatorHigh, prevIndicatorHigh),
+        };
+      }
+    }
+
+    // Bullish Divergence: Lower low in price, higher low in indicator
+    if (priceLows.length >= 2 && indicatorLows.length >= 2) {
+      const lastPriceLow = priceLows[priceLows.length - 1];
+      const prevPriceLow = priceLows[priceLows.length - 2];
+      const lastIndicatorLow = indicatorLows[indicatorLows.length - 1];
+      const prevIndicatorLow = indicatorLows[indicatorLows.length - 2];
+
+      if (lastPriceLow.value < prevPriceLow.value && lastIndicatorLow.value > prevIndicatorLow.value) {
+        return {
+          type: 'bullish',
+          strength: this.calculateDivergenceStrength(lastPriceLow, prevPriceLow, lastIndicatorLow, prevIndicatorLow),
+        };
+      }
+    }
+
+    return null;
   }
 
+  private findPeaks(values: number[]): { value: number; index: number }[] {
+    const peaks = [];
+    for (let i = 1; i < values.length - 1; i++) {
+      if (values[i] > values[i - 1] && values[i] > values[i + 1]) {
+        peaks.push({ value: values[i], index: i });
+      }
+    }
+    return peaks;
+  }
+
+  private findTroughs(values: number[]): { value: number; index: number }[] {
+    const troughs = [];
+    for (let i = 1; i < values.length - 1; i++) {
+      if (values[i] < values[i - 1] && values[i] < values[i + 1]) {
+        troughs.push({ value: values[i], index: i });
+      }
+    }
+    return troughs;
+  }
+
+  private calculateDivergenceStrength(
+    price1: { value: number },
+    price2: { value: number },
+    indicator1: { value: number },
+    indicator2: { value: number },
+  ): number {
+    const priceChange = Math.abs((price1.value - price2.value) / price2.value);
+    const indicatorChange = Math.abs((indicator1.value - indicator2.value) / indicator2.value);
+    return Math.min(1, priceChange + indicatorChange); // Simple strength calculation
+  }
+  
   // RSI
   async rsi(values: number[], period: number): Promise<number[]> {
     const key = this.createCacheKey('rsi', { period }, values);
