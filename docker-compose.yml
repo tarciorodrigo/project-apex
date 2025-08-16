@@ -21,7 +21,7 @@ services:
       - apex-network
 
   mongodb:
-    image: mongo:7
+    image: mongo:4.4
     restart: unless-stopped
     ports:
       - "27017:27017"

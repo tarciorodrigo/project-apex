@@ -1,14 +1,18 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ScoringModule } from '../scoring/scoring.module';
 import { MultiTimeframeService } from './services/multi-timeframe.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { StrategyEngineService } from './services/strategy-engine.service';
 import { IndicatorsModule } from './indicators.module';
+import { StrategyEngineModule } from './strategy-engine/strategy-engine.module';
 
 @Module({
-  imports: [CacheModule.register(), forwardRef(() => ScoringModule), EventEmitterModule.forRoot(), IndicatorsModule],
-  providers: [MultiTimeframeService, StrategyEngineService],
-  exports: [MultiTimeframeService, StrategyEngineService],
+  imports: [
+    CacheModule.register(),
+    EventEmitterModule.forRoot(),
+    IndicatorsModule,
+    StrategyEngineModule,
+  ],
+  providers: [MultiTimeframeService],
+  exports: [MultiTimeframeService, StrategyEngineModule],
 })
 export class StrategiesModule {}

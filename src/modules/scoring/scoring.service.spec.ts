@@ -40,6 +40,8 @@ describe('ScoringService', () => {
 
   it('should return score and confidence', async () => {
     const signal: SignalDto = {
+      strategy: 'test',
+      pair: 'BTCUSDT',
       timeframe: '5m',
       indicators: { rsi: 50 },
     };

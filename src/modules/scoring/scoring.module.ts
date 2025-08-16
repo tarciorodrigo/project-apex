@@ -1,11 +1,11 @@
 
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ScoringService } from './scoring.service';
-import { StrategiesModule } from '../strategies/strategies.module';
 import { IndicatorsModule } from '../strategies/indicators.module';
+import { StrategiesModule } from '../strategies/strategies.module';
 
 @Module({
-  imports: [forwardRef(() => StrategiesModule), IndicatorsModule],
+  imports: [IndicatorsModule, StrategiesModule],
   providers: [ScoringService],
   exports: [ScoringService],
 })

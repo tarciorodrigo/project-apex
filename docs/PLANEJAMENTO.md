@@ -194,11 +194,11 @@ graph TB
 - [x] Performance testing das estratégias
 
 #### Sprint 2.4: Strategy Engine Core (Semana 8)
-- [ ] **Motor de Estratégias** principal
-- [ ] Sistema de regras configuráveis
-- [ ] Strategy factory pattern
-- [ ] Validação de sinais em tempo real
-- [ ] Logging detalhado de decisões
+- [x] **Motor de Estratégias** principal
+- [x] Sistema de regras configuráveis
+- [x] Strategy factory pattern
+- [x] Validação de sinais em tempo real
+- [x] Logging detalhado de decisões
 
 ### FASE 3: GESTÃO DE RISCO E EXECUÇÃO (Semanas 9-12)
 **Objetivo**: Implementar gestão de risco profissional e execução otimizada

@@ -1,5 +1,6 @@
 
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SignalDto } from './dtos/signal.dto';
 import { MultiTimeframeService } from '../strategies/services/multi-timeframe.service';
 import { IndicatorsService } from '../strategies/services/indicators.service';
@@ -32,6 +33,7 @@ export class ScoringService {
   constructor(
     private readonly multiTimeframeService: MultiTimeframeService,
     private readonly indicatorsService: IndicatorsService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async calculateMultiTimeframeScore(pair: string, primaryTimeframe: string): Promise<{ score: number; confidence: number }> {
@@ -82,10 +84,16 @@ export class ScoringService {
     const multiplier = defaultConfig.timeframe_multiplier[primaryTimeframe] || 1.0;
     const finalScore = scoreWithDivergence * multiplier;
 
-    return {
+    const result = {
       score: Math.round(Math.min(100, finalScore)),
       confidence: primarySignal.confidence || 0.8,
     };
+
+    if (result.score >= defaultConfig.minimum_score) {
+      this.eventEmitter.emit('signal.generated', { ...primarySignal, score: result.score, confidence: result.confidence });
+    }
+
+    return result;
   }
 
   private calculateSingleTimeframeScore(signal: SignalDto): number {
